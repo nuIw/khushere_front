@@ -1,7 +1,6 @@
 import 'package:final_p/Home_page.dart';
 import "package:flutter/material.dart";
 import 'dart:async';
-
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
 
@@ -10,6 +9,7 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+
   @override
   void initState(){
     super.initState();
@@ -17,7 +17,7 @@ class _SplashScreenState extends State<SplashScreen> {
     {
       Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => Home_page(for_test: 0.8))//여기 home_page 생성자에 double형 데이터 쏘면 됨.
+          MaterialPageRoute(builder: (context) => Home_page())//여기 home_page 생성자에 double형 데이터 쏘면 됨.
       );
     }
     );

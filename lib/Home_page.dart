@@ -2,41 +2,27 @@ import 'package:final_p/Detail_page.dart';
 import "package:flutter/material.dart";
 import "package:shared_preferences/shared_preferences.dart";
 import 'package:percent_indicator/percent_indicator.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'Get_data.dart';
 
 class Home_page extends StatefulWidget {
-  Home_page({required double for_test}) {//서버로부터 double형 for_test 받은 거 동아리 방 current_percent로 전달.
-    current_percent["동아리 방"] = for_test;
-    get_favo();
+
+  Map place = {"즐겨찾기": [], "식당": ["제2 기숙사 학생식당", "학생회관 식당", "우정원 푸드코트"], "헬스장": ["선승관 헬스장"], "단과대 열람실": ["공대 열람실", "자대 열람실", "동아리 방"]};
+  Map drop_menu = {"즐겨찾기": false, "식당": false, "헬스장": false, "단과대 열람실": false};
+  Map favo = {"제2 기숙사 학생식당": false, "학생회관 식당": false, "우정원 푸드코트": false, "선승관 헬스장": false, "공대 열람실": false, "자대 열람실": false, "동아리 방": false};
+  Map current_percent = {"제2 기숙사 학생식당": 0.5, "학생회관 식당": 0.2, "우정원 푸드코트": 0.1, "선승관 헬스장": 0.3, "공대 열람실": 0.5, "자대 열람실": 0.2, "동아리 방": 0.1}; //test 를 위한 임의의 값 전달.
+
+  Home_page() {//생성자
+    GetFavoData();
+    Settrafficdata();
   }
 
-  Map place = {
-    "즐겨찾기": [],
-    "식당": ["제2 기숙사 학생식당", "학생회관 식당", "우정원 푸드코트"],
-    "헬스장": ["선승관 헬스장"],
-    "단과대 열람실": ["공대 열람실", "자대 열람실", "동아리 방"]
-  };
-  Map drop_menu = {"즐겨찾기": false, "식당": false, "헬스장": false, "단과대 열람실": false};
-  Map favo = {
-    "제2 기숙사 학생식당": false,
-    "학생회관 식당": false,
-    "우정원 푸드코트": false,
-    "선승관 헬스장": false,
-    "공대 열람실": false,
-    "자대 열람실": false,
-    "동아리 방": false
-  };
-  Map current_percent = {
-    //임의의 값 지정
-    "제2 기숙사 학생식당": 0.5,
-    "학생회관 식당": 0.2,
-    "우정원 푸드코트": 0.1,
-    "선승관 헬스장": 0.3,
-    "공대 열람실": 1.0,
-    "자대 열람실": 0.2,
-    "동아리 방": 0.6
-  };
+  void Settrafficdata() async{
+    List<dynamic> data = await getTraffic(1);
+    current_percent["동아리 방"] = data[0];
+  }
 
-  void get_favo() async {
+  void GetFavoData() async {
     //가져오기
     var pref = await SharedPreferences.getInstance();
     for (var i in favo.keys) {
@@ -44,13 +30,11 @@ class Home_page extends StatefulWidget {
       if (temp == true) {
         favo[i] = temp;
         place["즐겨찾기"].add(i);
-      } else if (temp == false) {
-        favo[i] = temp;
-      }
+      } else if (temp == false) {favo[i] = temp;}
     }
   }
 
-  void update_favo(String key, bool value) async {
+  void UpdateFavoData(String key, bool value) async {
     //저장
     final SharedPreferences pref = await SharedPreferences.getInstance();
     pref.setBool(key, value);
@@ -108,6 +92,7 @@ class _Home_pageState extends State<Home_page> {
                               onPressed: () {
                                 setState(() {
                                   if (widget.favo[down]) {
+                                    toast_bottom("${down}이(가) 즐겨찾기에 취소됐습니다");
                                     for (int i = 0;
                                     i < widget.place["즐겨찾기"].length;
                                     i++) {
@@ -117,52 +102,45 @@ class _Home_pageState extends State<Home_page> {
                                       }
                                     }
                                   } else {
+                                    toast_bottom("${down}이(가) 즐겨찾기에 등록됐습니다");
                                     widget.place["즐겨찾기"].add(down);
                                   }
                                   widget.favo[down] = !widget.favo[down];
-                                  widget.update_favo(down, widget.favo[down]);
+                                  widget.UpdateFavoData(down, widget.favo[down]);
                                 });
                               },
                             )),
                         ButtonTheme(
                             child: TextButton(
                               onPressed: () {
-                                setState(() {
+                                setState(() async{
                                   if(down == "동아리 방"){
+                                    List data = await getTraffic(7);
                                     Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                            builder: (context) =>
-                                                Detail_page(
-                                                    place_name: down,
-                                                    day_percent: [0.1, 0.3, 0.7, 0.8, 0.1, 0.2, 0.5]//여기 down이 동아리 방일 경우, 동아리 방의 day_percent 전달.
-                                                )
+                                            builder: (context) => Detail_page(place_name: down,day_percent: data)
                                         )
                                     );
                                   }
                                   else{
+                                    List data = await getTraffic(7);
                                     Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                            builder: (context) =>
-                                                Detail_page(
-                                                    place_name: down,
-                                                    day_percent: [0.1, 0.5, 0.2, 0.4, 0.2, 0.8, 0.9]
-                                                )
+                                            builder: (context) => Detail_page(place_name: down,day_percent: [0.1,0.3,0.9,0.3,0.8,0.2,0.4])//동아리 방 아닌 장소는 임의의 값 전달
                                         )
                                     );
                                   }
-                                });
+                                }
+                                );
                               },
                               child: Text(down,
                                   style:
                                   TextStyle(color: Colors.black, fontSize: 15)),
                             )),
                         LinearPercentIndicator(
-                          width: MediaQuery
-                              .of(context)
-                              .size
-                              .width - 200,
+                          width: MediaQuery.of(context).size.width - 200,
                           animation: true,
                           animationDuration: 850,
                           percent: widget.current_percent[down],
@@ -184,7 +162,7 @@ class _Home_pageState extends State<Home_page> {
         backgroundColor: Colors.black,
         onPressed: () {
           setState(() {
-            widget.current_percent["동아리 방"] = 0.4; //여기 double 값만 불러오면 됨.
+            widget.Settrafficdata(); //여기 double 값만 불러오면 됨.
           });
         },
       ),
@@ -219,4 +197,14 @@ Icon drop_icon(bool is_drop) {
 Icon favorite_icon(bool is_favo) {
   if (is_favo) return const Icon(Icons.favorite, color: Colors.red);
   return const Icon(Icons.favorite_border_outlined);
+}
+
+void toast_bottom(String msg) {
+  Fluttertoast.showToast(
+      msg: '${msg}',
+      gravity: ToastGravity.BOTTOM,
+      fontSize: 15.0,
+      backgroundColor: Colors.grey,
+      textColor: Colors.black,
+      toastLength: Toast.LENGTH_SHORT);
 }

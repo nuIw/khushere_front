@@ -1,11 +1,11 @@
-import 'package:final_p/Home_page.dart';
 import "package:flutter/material.dart";
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
+import 'Get_data.dart';
 
 class Detail_page extends StatefulWidget {
-  Detail_page({required this.place_name, required this.day_percent, super.key});//생성자- homepage에서 넘어올 때 값 받아올거임.
+
   String place_name = "";
   final Map place_data = {
     "제2 기숙사 학생식당": "점심 - 11:30 ~ 13:30 저녁 - 17:00 ~ 18:30",
@@ -18,12 +18,20 @@ class Detail_page extends StatefulWidget {
   };
   List day_percent = [];
 
+  Detail_page({required this.place_name, required this.day_percent}) {}
+
+  void Settrafficdata() async{
+    List<dynamic> data = await getTraffic(7);
+    day_percent = data;
+  }
+
   @override
   State<Detail_page> createState() => _Detail_pageState();
 }
 
 
 class _Detail_pageState extends State<Detail_page> {
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -97,13 +105,24 @@ class _Detail_pageState extends State<Detail_page> {
         backgroundColor: Colors.black,
         onPressed: () {
           setState(() {
-            if(widget.place_name == "동아리 방"){//서버에서 받아온 값으로 day_percent 리스트 초기화 시켜주면 된다.
-              //widget.day_percent = [list];
+            if(widget.place_name == "동아리 방"){
+              widget.Settrafficdata();
             }
           });
         },
       ),
     );
+  }
+}
+
+MaterialAccentColor progress_bar(double per) {
+  //progress bar 구현
+  if (per > 0.75) {
+    return Colors.redAccent;
+  } else if (per >= 0.5) {
+    return Colors.blueAccent;
+  } else {
+    return Colors.greenAccent;
   }
 }
 
@@ -129,6 +148,7 @@ Widget getTitles(double value, TitleMeta meta) {
     child: Text(text, style: const TextStyle(fontSize: 10,)),
   );
 }
+
 String progress_text(double per) {
   //progress bar 구현
   if (per > 0.7) {
